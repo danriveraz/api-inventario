@@ -1,38 +1,17 @@
 <?php
 
-  $app -> get( '/usuarios', function(  $request,  $response )
+  use Firebase\JWT\JWT;
+
+  $app -> get( '/conexion', function(  $request,  $response )
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
     try  
     {
-      $db = getConexion();
-
-      $sql = "SELECT *
-              FROM usuarios  ";
-
-      $result = $db -> query( $sql );
-
-      if( $result -> rowCount() > 0 )
-      {
-          $list = $result -> fetchAll( PDO::FETCH_ASSOC );
-
-          $result = array( 
-            "status" => true,
-            "usuarios" => $list 
-          );
-
-          $response = $response -> withStatus(200);
-      }
-      else 
-      {
-          $result = array( 
-              "message" => "No hay datos", 
-              "status" => false 
-          );
-
-          $response = $response -> withStatus(404);
-      }
+      $result = array(
+        "status" => true,
+        "message" => "Hay conexión"
+      );
       
       $response -> write( json_encode( $result ));
     }
@@ -43,7 +22,6 @@
     }
 
     $result = null;
-    $db = null;
 
     return $response;
   }); 
@@ -107,3 +85,26 @@
 
     return $response;
   });
+
+
+  $app->post("/token", function ($request, $response, $arguments) 
+  {
+    $now = new DateTime();
+    $future = new DateTime("now +2 hours");
+
+    $payload = [
+        "iat" => $now->getTimeStamp(),
+        "exp" => $future->getTimeStamp(),
+        "iss" => "api-inventario",
+    ];
+
+    $secret = "ef91f45375acf9a07ec23de8e9f2bb02cfdab79ec4e46d40d5cd88305c74da95"; //MD5(APIDANINVMD5CRI)
+    $token = JWT::encode($payload, $secret, "HS256");
+    
+    $data["status"] = "true";
+    $data["token"] = $token;
+
+    return $response->withStatus(201)->withHeader("Content-Type", "application/json")->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+  });
+
+?>

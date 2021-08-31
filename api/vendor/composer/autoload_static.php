@@ -22,7 +22,12 @@ class ComposerStaticInitdd9669a86539a744360676280bb9ee6c
         ),
         'F' => 
         array (
+            'Firebase\\JWT\\' => 13,
             'FastRoute\\' => 10,
+        ),
+        'A' => 
+        array (
+            'App\\' => 4,
         ),
     );
 
@@ -39,9 +44,17 @@ class ComposerStaticInitdd9669a86539a744360676280bb9ee6c
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
+        'Firebase\\JWT\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+        ),
         'FastRoute\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/fast-route/src',
+        ),
+        'App\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/app',
         ),
     );
 
