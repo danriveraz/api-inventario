@@ -17,7 +17,7 @@ class Core
     $sql = "SELECT *
             FROM usuarios 
             WHERE numDocumento = '$numDocumento'  
-            AND a.codEstado = '1' ";
+            AND codEstado = '1' ";
 
     return $this -> bd -> Consultar( $sql, 1 );
   }
@@ -137,7 +137,16 @@ class Core
   }
 
 
-  
+  function login( $data )
+  {
+    $sql = "SELECT *
+            FROM usuarios 
+            WHERE SHA2(numDocumento, 512) = '$data[numDocumento]'
+            AND clave = '$data[clave]'
+            AND codEstado = '1' ";
+
+    return $this -> bd -> Consultar( $sql, 1 );
+  }
 }
 
 ?>
