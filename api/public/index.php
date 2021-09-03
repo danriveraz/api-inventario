@@ -7,10 +7,9 @@ use \Psr\Http\Message\ResponseInterface as Response;
 
 require '../lib/config.php';
 require '../lib/bd.php';
+require '../lib/fn.php';
 require '../lib/class.phpmailer.php';
 require '../vendor/autoload.php';
-
-
 
 foreach( glob( "../lib/class/*.php" ) as $filename ) require $filename;
 

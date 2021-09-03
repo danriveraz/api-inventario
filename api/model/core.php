@@ -2,6 +2,7 @@
 
 if( !md5( "api2021inv" ) ) die( "No cuenta con los permisos requeridos." );
 
+use Firebase\JWT\JWT;
 class Core
 {
   var $bd = null;
@@ -20,6 +21,12 @@ class Core
             AND codEstado = '1' ";
 
     return $this -> bd -> Consultar( $sql, 1 );
+  }
+
+
+  function getSecretKey()
+  {
+    return "ef91f45375acf9a07ec23de8e9f2bb02cfdab79ec4e46d40d5cd88305c74da95";
   }
 
 
@@ -141,11 +148,32 @@ class Core
   {
     $sql = "SELECT *
             FROM usuarios 
-            WHERE SHA2(numDocumento, 512) = '$data[numDocumento]'
+            WHERE SHA2(emaUsuario, 512) = '$data[email]'
             AND clave = '$data[clave]'
             AND codEstado = '1' ";
 
     return $this -> bd -> Consultar( $sql, 1 );
+  }
+
+
+  function validarToken( $token )
+  {
+    try
+    {
+      $dataObject = JWT::decode($token, $this -> getSecretKey(), array('HS256'));
+
+      return array(
+        "status" => true,
+        "data" => $dataObject
+      );
+    }
+    catch( Exception $e )
+    {
+      return array( 
+        "status" => false,
+        "message" => "Error, el token no es valido.", 
+      );
+    }
   }
 }
 

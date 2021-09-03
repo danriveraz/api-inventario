@@ -93,11 +93,11 @@
 
     try  
     {
-      $numDocumento = $request -> getHeaderLine( 'numDocumento' );
+      $email = $request -> getHeaderLine( 'email' );
       $clave = $request -> getHeaderLine( 'clave' );
 
       $data = array(
-        "numDocumento" => $numDocumento,
+        "email" => $email,
         "clave" => $clave
       );
 
@@ -119,18 +119,17 @@
         $payload = [
           "iat" => $now->getTimeStamp(),
           "exp" => $future->getTimeStamp(),
-          "iss" => "api-inventario",
-          "data" => array(
+          "userData" => array(
             "codUsuario" => $login['codUsuario'],
-            "nomUsuario" => $login['nomUsuario'],
-            "apeUsuario" => $login['apeUsuario'],
-            "emaUsuario" => $login['emaUsuario']
+            "emaUsuario" => $login['emaUsuario'],
+            "codEmpresa" => "",
+            "perfil" => ""
           )
         ];
   
-        $secret = "ef91f45375acf9a07ec23de8e9f2bb02cfdab79ec4e46d40d5cd88305c74da95"; //MD5(APIDANINVMD5CRI)
+        $secret = $core -> getSecretKey();
 
-        $token = JWT::encode($payload, $secret, "HS256");
+        $token = JWT::encode($payload, $secret);
         
         $result = array(
           "status" => true,
@@ -151,6 +150,40 @@
       //$response->withStatus(201)->withHeader("Content-Type", "application/json")->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
       
       $response -> write( json_encode( $result, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ));
+    }
+    catch( PDOException $e )
+    {
+      $response = $response -> withStatus(400);
+      $response -> write( json_encode( array( 'message' => $e -> getMessage(), "status" => false )));
+    }
+
+    $result = null;
+
+    return $response;
+
+  });
+
+
+  $app->post("/verificarLogin", function ($request, $response, $arguments) 
+  {
+    $response = $response -> withHeader('Content-Type', 'application/json');
+
+    try  
+    {
+      $auth = $request -> getHeaderLine( 'Authorization' );
+
+      define( md5( "api2021inv" ), true );
+      include( "../model/core.php" );
+
+      $core = new Core( new bd() );
+
+      $token = str_replace("Bearer ", "", (string)$auth);
+
+      $data = $core -> validarToken( $token );
+
+      $response = $response -> withStatus(200);
+      
+      $response -> write( json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ));
     }
     catch( PDOException $e )
     {
