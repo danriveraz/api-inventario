@@ -2,32 +2,8 @@
 
   use Firebase\JWT\JWT;
 
-  $app -> get( '/conexion', function(  $request,  $response )
-  {
-    $response = $response -> withHeader('Content-Type', 'application/json');
 
-    try  
-    {
-      $result = array(
-        "status" => true,
-        "message" => "Hay conexión"
-      );
-      
-      $response -> write( json_encode( $result ));
-    }
-    catch( PDOException $e )
-    {
-      $response = $response -> withStatus(400);
-      $response -> write( json_encode( array( 'message' => $e -> getMessage(), "status" => false )));
-    }
-
-    $result = null;
-
-    return $response;
-  }); 
-
-
-  $app -> post( '/registerUser', function(  $request,  $response )
+  $app -> post( '/register', function(  $request,  $response )
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
@@ -35,20 +11,28 @@
     {
       $nomUsuario = $request -> getHeaderLine( 'nomUsuario' );
       $apeUsuario = $request -> getHeaderLine( 'apeUsuario' );
-      $numDocumento = $request -> getHeaderLine( 'numDocumento' );
       $clave = $request -> getHeaderLine( 'clave' );
       $emaUsuario = $request -> getHeaderLine( 'emaUsuario' );
       $dirUsuario = $request -> getHeaderLine( 'dirUsuario' );
-      $telUsuario = $request -> getHeaderLine( 'telUsuario' );
+
+      $nomEmpresa = $request -> getHeaderLine( 'nomEmpresa' );
+      $nitEmpresa = $request -> getHeaderLine( 'nitEmpresa' );
+      $telEmpresa = $request -> getHeaderLine( 'telEmpresa' );
+      $emaEmpresa = $request -> getHeaderLine( 'emaEmpresa' );
+
+      $activation = $request -> getHeaderLine( 'activation' );
 
       $data = array(
         "nomUsuario" => $nomUsuario,
         "apeUsuario" => $apeUsuario,
-        "numDocumento" => $numDocumento,
         "clave" => $clave,
         "emaUsuario" => $emaUsuario,
         "dirUsuario" => $dirUsuario,
-        "telUsuario" => $telUsuario
+        'nomEmpresa' => $nomEmpresa,
+        'nitEmpresa' => $nitEmpresa,
+        'telEmpresa' => $telEmpresa,
+        'emaEmpresa' => $emaEmpresa,
+        'activation' => $activation
       );
 
       define( md5( "api2021inv" ), true );
@@ -57,7 +41,7 @@
 
       $core = new Core( new bd() );
 
-      $result = $core -> registerUser( $data );
+      $result = $core -> register( $data );
 
       if( $result )
       {
@@ -108,7 +92,7 @@
       $core = new Core( new bd() );
 
       $login = $core -> login( $data );
-
+      
       if( $login )
       {
         $response = $response -> withStatus(200);
@@ -122,8 +106,8 @@
           "userData" => array(
             "codUsuario" => $login['codUsuario'],
             "emaUsuario" => $login['emaUsuario'],
-            "codEmpresa" => "",
-            "perfil" => ""
+            "codEmpresa" => $login['codEmpresa'],
+            "perfil" => $login['codPerfil']
           )
         ];
   
