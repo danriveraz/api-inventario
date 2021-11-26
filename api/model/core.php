@@ -515,7 +515,8 @@ class Core
         return array(
           "status" => true,
           "message" => "Proceso exitoso.",
-          "empresas" => $empresas
+          "empresas" => $empresas,
+          "token" => $token
         );
       }
       else
@@ -570,6 +571,132 @@ class Core
           "token" => $token
         );
       }
+    }
+  }
+
+
+  function getDataUserCompany( $token ) // Obtiene los datos de un usuario y su empresa asociada
+  {
+    $dataUser = $this -> validarToken( $token );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codUsuario = $dataUser['data']-> userData -> codUsuario;
+      $codEmpresa = $dataUser['data']-> userData -> codEmpresa;
+
+      $sql = "SELECT a.nomUsuario, a.apeUsuario, a.numDocumento, a.telUsuario, a.emaUsuario,
+                    c.nomEmpresa, c.nitEmpresa, c.telEmpresa, c.emaEmpresa, d.nomPerfil
+              FROM usuarios a
+              LEFT JOIN empusuario b
+              ON a.codUsuario = b.codUsuario
+              LEFT JOIN empresas c
+              ON b.codEmpresa = c.codEmpresa
+              LEFT JOIN perfiles d
+              ON b.codPerfil = d.codPerfil
+              WHERE a.codUsuario = '$codUsuario'  
+              AND b.codEmpresa = '$codEmpresa'
+              AND a.codEstado = '1' ";
+
+      $dataUser = $this -> bd -> Consultar( $sql, 1 );
+
+      return array(
+        "status" => true,
+        "message" => "Proceso exitoso.",
+        "data" => $dataUser,
+        "token" => $token
+      );
+    }
+  }
+
+
+  function getDataUser( $token ) // Obtiene los datos de un usuario
+  {
+    $dataUser = $this -> validarToken( $token );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codUsuario = $dataUser['data']-> userData -> codUsuario;
+
+      $sql = "SELECT a.nomUsuario, a.apeUsuario, a.numDocumento, a.telUsuario, a.emaUsuario
+              FROM usuarios a
+              WHERE a.codUsuario = '$codUsuario'  
+              AND a.codEstado = '1' ";
+
+      $dataUser = $this -> bd -> Consultar( $sql, 1 );
+
+      return array(
+        "status" => true,
+        "message" => "Proceso exitoso.",
+        "data" => $dataUser,
+        "token" => $token
+      );
+    }
+  }
+
+
+  function editCompany( $data )
+  {
+    $dataUser = $this -> validarToken( $data['token'] );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codEmpresa = $dataUser['data']-> userData -> codEmpresa;
+
+      $sql = "UPDATE empresas
+              SET nomEmpresa = '$data[nomEmpresa]',
+                  telEmpresa = '$data[telEmpresa]',
+                  emaEmpresa = '$data[emaEmpresa]',
+                  fecEdicion = NOW()
+              WHERE codEmpresa = '$codEmpresa' ";
+
+      $this -> bd -> Consultar( $sql );
+
+      return array(
+        "status" => true,
+        "message" => "Proceso exitoso.",
+        "token" => $data['token']
+      );
+    }
+  }
+
+
+  function getDataCompany( $token ) // Obtiene los datos de un usuario
+  {
+    $dataUser = $this -> validarToken( $token );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codEmpresa = $dataUser['data']-> userData -> codEmpresa;
+
+      $sql = "SELECT a.nomEmpresa, a.nitEmpresa, a.telEmpresa, a.emaEmpresa
+              FROM empresas a
+              WHERE a.codEmpresa = '$codEmpresa'  
+              AND a.codEstado = '1' ";
+
+      $dataUser = $this -> bd -> Consultar( $sql, 1 );
+
+      return array(
+        "status" => true,
+        "message" => "Proceso exitoso.",
+        "data" => $dataUser,
+        "token" => $token
+      );
     }
   }
 }

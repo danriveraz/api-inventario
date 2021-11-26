@@ -59,7 +59,7 @@
   });
 
 
-  $app->post("/login", function ($request, $response, $arguments) 
+  $app->post("/login", function ($request, $response) 
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
@@ -137,7 +137,7 @@
   });
 
 
-  $app->post("/verificarLogin", function ($request, $response, $arguments) 
+  $app->post("/verificarLogin", function ($request, $response) 
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
@@ -170,7 +170,7 @@
   });
 
 
-  $app->post("/getUserCompanies", function ($request, $response, $arguments) 
+  $app->post("/getUserCompanies", function ($request, $response) 
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
@@ -203,7 +203,7 @@
   });
 
 
-  $app->post("/changeCompany", function ($request, $response, $arguments) 
+  $app->post("/changeCompany", function ($request, $response) 
   {
     $response = $response -> withHeader('Content-Type', 'application/json');
 
@@ -414,6 +414,72 @@
     }
 
     $result = null;
+
+    return $response;
+  });
+
+
+  $app->post("/getDataUser", function ($request, $response) 
+  {
+    $response = $response -> withHeader('Content-Type', 'application/json');
+
+    try  
+    {
+      $dataRequest = $request -> getParams();
+
+      $auth = $dataRequest['Authorization'];
+
+      define( md5( "api2021inv" ), true );
+      include( "../model/core.php" );
+
+      $core = new Core( new bd() );
+
+      $token = str_replace("Bearer ", "", (string) $auth);
+
+      $data = $core -> getDataUser( $token );
+
+      $response = $response -> withStatus(200);
+      
+      $response -> write( json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ));
+    }
+    catch( PDOException $e )
+    {
+      $response = $response -> withStatus(400);
+      $response -> write( json_encode( array( 'message' => $e -> getMessage(), "status" => false )));
+    }
+
+    return $response;
+  });
+
+
+  $app->post("/getDataUserCompany", function ($request, $response) 
+  {
+    $response = $response -> withHeader('Content-Type', 'application/json');
+
+    try  
+    {
+      $dataRequest = $request -> getParams();
+
+      $auth = $dataRequest['Authorization'];
+
+      define( md5( "api2021inv" ), true );
+      include( "../model/core.php" );
+
+      $core = new Core( new bd() );
+
+      $token = str_replace("Bearer ", "", (string) $auth);
+
+      $data = $core -> getDataUserCompany( $token );
+
+      $response = $response -> withStatus(200);
+      
+      $response -> write( json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ));
+    }
+    catch( PDOException $e )
+    {
+      $response = $response -> withStatus(400);
+      $response -> write( json_encode( array( 'message' => $e -> getMessage(), "status" => false )));
+    }
 
     return $response;
   });
