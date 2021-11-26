@@ -48,3 +48,15 @@ function getVal( $tabla, $campo, $llave, $valor )
     return $e -> getMessage();
   }
 }
+
+
+function sendMail( $subject, $message )
+{			
+    $mail = new PHPMailer;
+    $mail -> setFrom( "noreply@acspagos.co", "ACS APP" );//n172hU*pOXsU
+    //$mail -> addAddress( "heishin007@gmail.com", "Joan" );
+    $mail -> Subject = $subject;
+    $mail -> Body = $message;
+    //$mail -> IsHTML( true );
+    $mail -> send();
+}

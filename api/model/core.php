@@ -13,7 +13,13 @@ class Core
 	}
 
 
-  function consultUser( $data )
+  function getSecretKey()
+  {
+    return "ef91f45375acf9a07ec23de8e9f2bb02cfdab79ec4e46d40d5cd88305c74da95";
+  }
+
+
+  function consultUser( $data ) // Consulta si un usuario existe
   {
     $sql = "SELECT *
             FROM usuarios 
@@ -24,24 +30,7 @@ class Core
   }
 
 
-  function consultCompany( $data )
-  {
-    $sql = "SELECT *
-            FROM empresas 
-            WHERE nitEmpresa = '$data'  
-            AND codEstado = '1' ";
-
-    return $this -> bd -> Consultar( $sql, 1 );
-  }
-
-
-  function getSecretKey()
-  {
-    return "ef91f45375acf9a07ec23de8e9f2bb02cfdab79ec4e46d40d5cd88305c74da95";
-  }
-
-
-  function registerUser( $data )
+  function registerUser( $data ) // Registra un usuario nuevo
   {
     //Validaciones previas (llegada de datos)
     if( !$data['nomUsuario'] )
@@ -126,7 +115,163 @@ class Core
   }
 
 
-  function registerCompany( $data )
+  function editUser( $data )
+  {
+    $dataUser = $this -> validarToken( $data['token'] );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      if( !$data['codUsuario'] )
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, debe ingresar el usuario.",
+          "token" => $data['token']
+        );
+      }
+      else
+      {
+        $sql = "UPDATE usuarios
+                SET nomUsuario = '$data[nomUsuario]',
+                    apeUsuario = '$data[apeUsuario]',
+                    telUsuario = '$data[telUsuario]',
+                    dirUsuario = '$data[dirUsuario]',
+                    fecEdicion = NOW()
+                WHERE codUsuario = '$data[codUsuario]' ";
+
+        $this -> bd -> Consultar( $sql );
+
+        return array(
+          "status" => true,
+          "message" => "Proceso exitoso.",
+          "token" => $data['token']
+        );
+      }
+    }
+  }
+
+
+  function changePass( $data )
+  {
+    $dataUser = $this -> validarToken( $data['token'] );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      if( !$data['pass'] )
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, debe ingresar su clave actual.",
+          "token" => $data['token']
+        );
+      }
+      elseif( $data['newPass'] == '' || $data['newPass'] != $data['confirmPass'] )
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, la nueva clave debe ser igual a la confirmación de la misma.",
+          "token" => $data['token']
+        );
+      }
+      else
+      {
+        $codUsuario = $dataUser['data']-> userData -> codUsuario;
+
+        $data['pass'] = hash( "sha512", $data['pass'] );
+
+        $sql = "SELECT *
+                FROM usuarios 
+                WHERE clave = '$data[pass]'
+                AND codUsuario = '$codUsuario'
+                AND codEstado = '1' ";
+
+        $usuario = $this -> bd -> Consultar( $sql, 1 );
+
+        if( !$usuario )
+        {
+          return array(
+            "status" => false,
+            "message" => "Error, la clave ingresada no es correcta.",
+            "token" => $data['token']
+          );
+        }
+        else
+        {
+          $newPass = hash( "sha512", $data['newPass'] );
+
+          $sql = "UPDATE usuarios
+                  SET clave = '$newPass',
+                      fecEdicion = NOW()
+                  WHERE codUsuario = '$codUsuario' ";
+
+          $this -> bd -> Consultar( $sql );
+
+          return array(
+            "status" => true,
+            "message" => "Proceso exitoso.",
+            "token" => $data['token']
+          );
+        }
+      }
+    }
+  }
+
+
+  function deleteUser( $data )
+  {
+    $dataUser = $this -> validarToken( $data['token'] );
+
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      if( !$data['codUsuario'] )
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, debe ingresar el usuario."
+        );
+      }
+      else
+      {
+        $sql = "UPDATE usuarios
+                SET codEstado = '0'
+                WHERE codUsuario = '$data[codUsuario]' ";
+
+        $this -> bd -> Consultar( $sql );
+
+        return array(
+          "status" => true,
+          "message" => "Proceso exitoso.",
+          "token" => $data['token']
+        );
+      }
+    }
+  }
+
+
+  function consultCompany( $data ) // Consulta una empresa
+  {
+    $sql = "SELECT *
+            FROM empresas 
+            WHERE nitEmpresa = '$data'  
+            AND codEstado = '1' ";
+
+    return $this -> bd -> Consultar( $sql, 1 );
+  }
+
+
+  function registerCompany( $data ) // Registra una empresa
   {
     //Validaciones previas (llegada de datos)
     if( !$data['nomEmpresa'] )
@@ -141,13 +286,6 @@ class Core
       return array(
         "status" => false,
         "message" => "Error, debe ingresar el nit de la empresa."
-      );
-    }
-    elseif( !$data['telEmpresa'] )
-    {
-      return array(
-        "status" => false,
-        "message" => "Error, debe ingresar el telefono de la empresa."
       );
     }
     elseif( !$data['emaEmpresa'] )
@@ -172,11 +310,11 @@ class Core
 
       $insert = "INSERT INTO empresas
           (
-            nomEmpresa, nitEmpresa, telEmpresa, emaEmpresa, fecRegistro, codEstado
+            nomEmpresa, nitEmpresa, emaEmpresa, fecRegistro, codEstado
           )
           VALUES
           (
-            '$nomEmpresa', '$data[nitEmpresa]', '$data[telEmpresa]', '$data[emaEmpresa]', NOW(), '1'
+            '$nomEmpresa', '$data[nitEmpresa]', '$data[emaEmpresa]', NOW(), '1'
           )";
 
       $this -> bd -> Consultar( $insert );
@@ -202,7 +340,7 @@ class Core
   }
 
 
-  function register( $data )
+  function register( $data ) // Se registra tanto el usuario como la empresa (Formulario registro login)
   {
     //Validaciones previas (llegada de datos)
 
@@ -310,11 +448,23 @@ class Core
             FROM usuarios a
             LEFT JOIN empusuario b
             ON a.codUsuario = b.codUsuario
-            WHERE SHA2(a.emaUsuario, 512) = '$data[email]'
-            AND a.clave = '$data[clave]'
+            WHERE a.emaUsuario = '$data[email]'
+            AND a.clave = '".hash( "sha512", $data['clave'] )."' 
             AND a.codEstado = '1' ";
 
-    return $this -> bd -> Consultar( $sql, 1 );
+    $usuario = $this -> bd -> Consultar( $sql, 1 );
+    
+    if( !$usuario )
+    {
+      return array(
+        "status" => false,
+        "message" => "Error, el usuario o la clave son incorrectos."
+      );
+    }
+    else
+    {
+      return $usuario;
+    }
   }
 
 
@@ -335,6 +485,91 @@ class Core
         "status" => false,
         "message" => "Error, el token no es valido.", 
       );
+    }
+  }
+
+
+  function getUserCompanies( $token )
+  {
+    $dataUser = $this -> validarToken( $token );
+    
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codUsuario = $dataUser['data']-> userData -> codUsuario;
+     
+      $sql = "SELECT a.*, b.nomEmpresa
+              FROM empusuario a
+              LEFT JOIN empresas b
+              ON a.codEmpresa = b.codEmpresa
+              WHERE a.codUsuario = '$codUsuario'  
+              AND a.codEstado = '1' ";
+
+      $empresas = $this -> bd -> Consultar( $sql, 2 );
+
+      if( $empresas )
+      {
+        return array(
+          "status" => true,
+          "message" => "Proceso exitoso.",
+          "empresas" => $empresas
+        );
+      }
+      else
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, no se encontraron empresas asociadas al usuario."
+        );
+      }
+    }
+  }
+
+
+  function changeCompany( $data )
+  {
+    $dataUser = $this -> validarToken( $data['token'] );
+    
+    if( !$dataUser['status'] )
+    {
+      return $dataUser;
+    }
+    else
+    {
+      $codUsuario = $dataUser['data']-> userData -> codUsuario;
+     
+      $sql = "SELECT *
+              FROM empusuario
+              WHERE codUsuario = '$codUsuario'
+              AND codEmpresa = '$data[codEmpresa]'  
+              AND codEstado = '1' ";
+
+      $empresa = $this -> bd -> Consultar( $sql, 1 );
+
+      if( !$empresa )
+      {
+        return array(
+          "status" => false,
+          "message" => "Error, la empresa no se encuentra asociada a este usuario"
+        );
+      }
+      else
+      {
+        $dataUser['data'] -> userData -> codEmpresa = $data['codEmpresa'];
+
+        $secret = $this -> getSecretKey();
+
+        $token = JWT::encode($dataUser['data'], $secret);
+      
+        return array(
+          "status" => true,
+          "message" => "Proceso exitoso.",
+          "token" => $token
+        );
+      }
     }
   }
 }
